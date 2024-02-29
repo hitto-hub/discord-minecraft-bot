@@ -78,31 +78,93 @@ async def stop(ctx: discord.ApplicationContext):
         await ctx.respond("サーバーは起動していません！")
 
 # whitelistコマンド
-@bot.command(name="whitelist", description="whitelist add <player>コマンドを実行します。")
-async def whitelist(ctx: discord.ApplicationContext, player: discord.Option(str, "プレイヤー名を入力してください。")):
-    try:
-        res = subprocess.check_output("screen -ls", shell=True, encoding="utf-8")
-        print(res)
-        # すでに起動しているかどうかを確認
-        if "mcServer" in res:
-            if player == None:
-                await ctx.respond("プレイヤー名を入力してください。")
+# subcommandがlistの場合playerはNone
+# subcommandがaddの場合playerは必須
+# subcommandがremoveの場合playerは必須
+@bot.command(name="whitelist", description="whitelist <subcommand> <player>コマンドを実行します。")
+async def whitelist(ctx: discord.ApplicationContext
+                    ,sub_command: discord.Option(str, "subcommandを選択してください。", choices=["add", "remove", "list"])
+                    ,player: discord.Option(str, "プレイヤー名を入力してください。add, removeの場合は必須です。", required=False)):
+    if sub_command == "add":
+        try:
+            res = subprocess.check_output("screen -ls", shell=True, encoding="utf-8")
+            print(res)
+            # すでに起動しているかどうかを確認
+            if "mcServer" in res:
+                if player == None:
+                    await ctx.respond("プレイヤー名を入力してください。")
+                    return
+                try:
+                    res = subprocess.check_output("screen -S mcServer -X stuff 'whitelist add " + player + "\n'", shell=True, encoding="utf-8")
+                    await ctx.respond(player + "をwhitelistに追加しました！")
+                    return
+                except Exception as e:
+                    print(f"Error: {e}")
+                    await ctx.respond(player + "をwhitelistに追加できませんでした")
+                    await ctx.respond("error: " + e)
+                    return
+            else:
+                print("実行されてないが、ほかのプロセスが実行されている")
+                await ctx.respond("サーバーは起動していません。起動してから実行してください。")
                 return
-            try:
-                res = subprocess.check_output("screen -S mcServer -X stuff 'whitelist add " + player + "\n'", shell=True, encoding="utf-8")
-                await ctx.respond(player + "をwhitelistに追加しました！")
-                return
-            except Exception as e:
-                print(f"Error: {e}")
-                await ctx.respond(player + "をwhitelistに追加できませんでした")
-                await ctx.respond("error: " + e)
-                return
-        else:
-            print("実行されてないが、ほかのプロセスが実行されている")
+        except Exception as e:
+            print(f"Error: {e}")
             await ctx.respond("サーバーは起動していません。起動してから実行してください。")
             return
-    except Exception as e:
-        print(f"Error: {e}")
-        await ctx.respond("サーバーは起動していません。起動してから実行してください。")
+    elif sub_command == "remove":
+        try:
+            res = subprocess.check_output("screen -ls", shell=True, encoding="utf-8")
+            print(res)
+            # すでに起動しているかどうかを確認
+            if "mcServer" in res:
+                if player == None:
+                    await ctx.respond("プレイヤー名を入力してください。")
+                    return
+                try:
+                    res = subprocess.check_output("screen -S mcServer -X stuff 'whitelist remove " + player + "\n'", shell=True, encoding="utf-8")
+                    await ctx.respond(player + "をwhitelistから削除しました！")
+                    return
+                except Exception as e:
+                    print(f"Error: {e}")
+                    await ctx.respond(player + "をwhitelistから削除できませんでした")
+                    await ctx.respond("error: " + e)
+                    return
+            else:
+                print("実行されてないが、ほかのプロセスが実行されている")
+                await ctx.respond("サーバーは起動していません。起動してから実行してください。")
+                return
+        except Exception as e:
+            print(f"Error: {e}")
+            await ctx.respond("サーバーは起動していません。起動してから実行してください。")
+            return
+    elif sub_command == "list":
+        try:
+            res = subprocess.check_output("screen -ls", shell=True, encoding="utf-8")
+            print(res)
+            # すでに起動しているかどうかを確認
+            if "mcServer" in res:
+                try:
+                    res = subprocess.check_output("screen -S mcServer -X stuff 'whitelist list\n'", shell=True, encoding="utf-8")
+                    # 実行結果を取得
+                    res_list = subprocess.check_output("tail -n 1 " + cwd + "/logs/latest.log", shell=True, encoding="utf-8")
+                    print(res_list)
+                    await ctx.respond(res_list)
+                    return
+                except Exception as e:
+                    print(f"Error: {e}")
+                    await ctx.respond("whitelist listを実行できませんでした")
+                    await ctx.respond("error: " + e)
+                    return
+            else:
+                print("実行されてないが、ほかのプロセスが実行されている")
+                await ctx.respond("サーバーは起動していません。起動してから実行してください。")
+                return
+        except Exception as e:
+            print(f"Error: {e}")
+            await ctx.respond("サーバーは起動していません。起動してから実行してください。")
+            return
+    else:
+        await ctx.respond("subcommandを選択してください。")
+        return
     
 bot.run(token)

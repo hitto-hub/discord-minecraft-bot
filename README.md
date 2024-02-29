@@ -18,7 +18,7 @@ python3 ./main.py
 ## コマンド
 /start: サーバーを起動します。
 /stop: サーバーを停止します。
-/whitelist <username>: ホワイトリストに追加します。
+/whitelist <subcommand> <username>: ホワイトリストに関連を実行します。
 
 ## ライセンス
 [MIT]
@@ -27,6 +27,5 @@ python3 ./main.py
 hitto
 
 ## その他
-気が向いたらwhitelistらへんの機能追加します。
 
 This README.md was largely created by GitHub Copilot.
